@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400,500,700');
+
+body {
+    font-family: Fira Sans, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #4f4f4f;
+    background-color: #999;
+}
+
+#app-container {
+    margin: 10% auto auto auto;
+    width: 620px;
+    height: 490px;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+#header {
+    height: 90px;
+}
+    #header-title {
+        height: 50%;
+        background-color: #ff8663;
+    }
+        #header-title-text {
+            margin: 0 0 0 15px;
+            line-height: 45px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
+            width: 50%;
+            float: left;
+        }
+        #header-close-app {
+            margin: 0 15px 0 0;
+            position: relative;
+            font-size: 36px;
+            font-weight: 500;
+            color: #fff;
+            float: right;
+            line-height: 45px;
+        }
+        #header-close-app:hover {
+            color: #f0f0f0;
+            cursor: pointer;
+        }
+
+    #header-search {
+        height: 50%;
+        background-color: #f0f0f0;
+    }
+        #search-in-all-friends {
+            margin: 9px 0 0 15px;
+            width: 285px;
+            height: 26px;
+            border-radius: 13px;
+            background-color: #fff;
+            float: left;
+        }
+            #search-in-all-input, #search-in-list-input {
+                margin: 0 0 0 12px;
+                width: 240px;
+                border: none;
+                outline: none;
+                font-family: Fira Sans, Helvetica, sans-serif;
+                font-size: 12px;
+                font-weight: 400;
+            }
+        #search-in-list {
+            margin: 9px 15px 0 0;
+            width: 285px;
+            height: 26px;
+            border-radius: 13px;
+            background-color: #fff;
+            float: right;
+        }
+            .magnifying-glass {
+                margin: 5px 0 0 8px;
+            }
+
+
+
+#friends-box {
+    height: 355px;
+}
+    #friends-all-box {
+        width: 309px;
+        float: left;
+        border-right: 1px solid #f0f0f0;
+    }
+    #friends-in-list-box {
+        width: 50%;
+        float: right;
+    }
+    #friends-all-box-title, #friends-in-list-box-title {
+        margin: 15px 15px 0 15px;
+        padding: 0 0 6px 0;
+        font-weight: 500;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    #friends-all-box-list, #friends-in-list-box-list {
+        height: 320px;
+        overflow: auto;
+    }
+
+.friend {
+    margin: 0 15px;
+    padding: 6px 6px;
+    float: left;
+    width: 266px;
+    height: 46px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.friend:hover {
+    background-color: #f0f0f0;
+}
+    .hovered {
+        background-color: #f0f0f0;
+    }
+
+    .friend .photo {
+        width: 45px;
+        height: 45px;
+        float: left;
+        border-radius: 50%;
+    }
+
+    .name {
+        margin: 1px 0 0 53px;
+        height: 45px;
+        font-weight: bold;
+        line-height: 45px;
+    }
+
+    .cross, .plus {
+        float: right;
+    }
+
+    .cross:hover, .plus:hover {
+        cursor: pointer;
+    }
+
+#footer {
+    height: 45px;
+    background-color: #f0f0f0;
+}
+    #save-button {
+        margin: 8px 8px 0 0;
+        width: 87px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        color: #fff;
+        float: right;
+        border-radius: 10px;
+        background-color: #ff8663;
+        cursor: pointer;
+    }
