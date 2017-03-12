@@ -71,11 +71,13 @@ function loadFriends(result) {
     }
 
     refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems); // встраиваем друзей в DOM
+
     return [friendsInAllFriendsItems, friendsInListItems];
 }
 
 function loadFromLocalStorage(friendsInAllFriendsItems, friendsInListItems) {
     let savedList = JSON.parse(localStorage.friendsInList);
+
     for (let i = 0; i < savedList.length; i++) {
         for (let j = 0; j < friendsInAllFriendsItems.length; j++) {
             if (friendsInAllFriendsItems[j].id == savedList[i]) {
@@ -154,7 +156,9 @@ function dndOnMouseDown(e, dragObject) {
 
     let elem = e.target.closest('.draggable'); // draggable-элемент
 
-    if (!elem) return; // не нашли, клик вне draggable-объекта
+    if (!elem) { // не нашли, клик вне draggable-объекта
+        return;
+    }
 
     // запомнить переносимый объект
     elem.classList.add('hovered'); // выделяем переносимый объект
@@ -168,13 +172,16 @@ function dndOnMouseDown(e, dragObject) {
 }
 
 function dndOnMouseMove(e, dragObject) {
-    if (!dragObject.elem) return; // элемент не зажат
+    if (!dragObject.elem) { // элемент не зажат
+        return;
+    }
 
     if ( !dragObject.avatar ) { // если перенос не начат...
 
         // посчитать дистанцию, на которую переместился курсор мыши
         let moveX = e.pageX - dragObject.downX;
         let moveY = e.pageY - dragObject.downY;
+
         if ( Math.abs(moveX) < 3 && Math.abs(moveY) < 3 ) {
             return; // ничего не делать, мышь не передвинулась достаточно далеко
         }
@@ -182,6 +189,7 @@ function dndOnMouseMove(e, dragObject) {
         dragObject.avatar = createAvatar(dragObject); // захватить элемент
         if (!dragObject.avatar) {
             dragObject = {}; // аватар создать не удалось, отмена переноса
+
             return; // возможно, нельзя захватить за эту часть элемента
         }
 
@@ -189,6 +197,7 @@ function dndOnMouseMove(e, dragObject) {
         dragObject.elem.hidden = false; // показать клон
         // создать вспомогательные свойства shiftX/shiftY
         let coords = getCoords(dragObject.avatar);
+
         dragObject.shiftX = dragObject.downX - coords.left;
         dragObject.shiftY = dragObject.downY - coords.top;
 
@@ -203,14 +212,16 @@ function dndOnMouseMove(e, dragObject) {
 }
 
 function dndOnMouseUp(e, dragObject, friendsInAllFriendsItems, friendsInListItems) {
-    // (1) обработать перенос, если он идет
+    // обработать перенос, если он идет
     if (dragObject.avatar) {
         finishDrag(e, dragObject, friendsInAllFriendsItems, friendsInListItems);
     }
 
     // в конце mouseup перенос либо завершился, либо даже не начинался
-    // (2) в любом случае очистим "состояние переноса" dragObject
-    if (dragObject.avatarDiv) dragObject.avatarDiv.remove();
+    // удалим переносимый клон из DOM
+    if (dragObject.avatarDiv) {
+        dragObject.avatarDiv.remove();
+    }
 }
 
 function createAvatar(dragObject) {
