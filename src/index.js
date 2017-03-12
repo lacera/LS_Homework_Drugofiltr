@@ -2,14 +2,6 @@ require('./index.css');
 require('./shapes.css');
 require('./scrollbar.css');
 
-function isMatching(full, chunk) {
-    if (full.toLowerCase().indexOf(chunk.toLowerCase()) > -1) {
-        return true;
-    }
-
-    return false;
-}
-
 function login() {
     return new Promise((resolve, reject) => {
         VK.init({
@@ -19,7 +11,7 @@ function login() {
             if (result.status == 'connected') {
                 resolve();
             } else {
-                reject();
+                reject(new Error('Не удалось выполнить!'));
             }
         });
     });
@@ -37,26 +29,21 @@ function callAPI(method, params) {
     });
 }
 
-function createAllFriendsDiv(friends) {
+function createAllFriendsDiv(friends, searchVal) {
     let templateFn = require('../friend-template.hbs');
-    /*Handlebars.registerHelper('searchLeftValue', (a, b) => {
-        if (searchLeftValue && searchRightValue) return isMatching(a + ' ' + b, searchVal)
-    });*/
-    //Handlebars.registerHelper('searchLeftValue', (a, b) => {a + ' ' + b});
-    //console.log(isMatching('Вася Пупкин', searchVal));
+
     return templateFn({
-        friends: friends
-        //searchLeftValue: searchVal
+        friends: friends,
+        searchLeftValue: searchVal
     });
 }
 
-function createInListFriendsDiv(friends) {
+function createInListFriendsDiv(friends, searchVal) {
     let templateFn = require('../friend-template.hbs');
-    //Handlebars.registerHelper('searchRightValue', (a, b) => {return isMatching(a + ' ' + b, searchVal)});
-    //console.log(isMatching('Вася Пупкин', searchVal));
+
     return templateFn({
-        friendsInList: friends
-        //searchRightValue: searchVal
+        friendsInList: friends,
+        searchRightValue: searchVal
     });
 }
 
@@ -70,56 +57,39 @@ let searchListInput = document.querySelector('#search-in-list-input');
 window.addEventListener('load', () => {
     login()
         .then(() => callAPI('friends.get', { v: 5.62, fields: ['city', 'country', 'photo_100'] }))
-        .then(result => {
-            let friendsInAllFriendsItems = result.items;
-            let friendsInListItems = [];
-
-            if (localStorage.friendsInList && JSON.parse(localStorage.friendsInList)) {
-                let savedList = JSON.parse(localStorage.friendsInList);
-                console.time('timer1');
-                for (let i = 0; i < savedList.length; i++) {
-                    for (let j = 0; j < friendsInAllFriendsItems.length; j++) {
-                        if (friendsInAllFriendsItems[j].id == savedList[i]) {
-                            friendsInListItems.push(friendsInAllFriendsItems[j]);
-                            friendsInAllFriendsItems.splice(j, 1);
-                        }
-                    }
-                }
-                console.timeEnd('timer1');
-                alert('Друзья в списке восстановлены из локального хранилища');
-            }
-
-            refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems);
-            return [friendsInAllFriendsItems, friendsInListItems];
-        })
+        .then(result => loadFriends(result)) // загружаем и показываем список друзей
         .then(result => assignEvents(result)) // назначаем события на элементы
-        .catch(() => alert('на чем-то мы упали'));
+        .catch(reject => console.error('Ошибка выполнения Promise : ' + reject));
 });
 
+function loadFriends(result) {
+    let friendsInAllFriendsItems = result.items;
+    let friendsInListItems = [];
+
+    if (localStorage.friendsInList && JSON.parse(localStorage.friendsInList)) {
+        loadFromLocalStorage(friendsInAllFriendsItems, friendsInListItems); // загружаем из локального ханилища
+    }
+
+    refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems); // встраиваем друзей в DOM
+    return [friendsInAllFriendsItems, friendsInListItems];
+}
+
+function loadFromLocalStorage(friendsInAllFriendsItems, friendsInListItems) {
+    let savedList = JSON.parse(localStorage.friendsInList);
+    for (let i = 0; i < savedList.length; i++) {
+        for (let j = 0; j < friendsInAllFriendsItems.length; j++) {
+            if (friendsInAllFriendsItems[j].id == savedList[i]) {
+                friendsInListItems.push(friendsInAllFriendsItems[j]);
+                friendsInAllFriendsItems.splice(j, 1);
+            }
+        }
+    }
+    alert('Друзья в списке восстановлены из локального хранилища');
+}
+
 function refreshFriendsLists(leftList, rightList, searchLeftValue, searchRightValue) {
-    //console.log(searchLeftValue + ' ' + searchRightValue);
-    //if (searchLeftValue && searchRightValue) console.log(isMatching(searchLeftValue, searchRightValue));
-    let filteredLeftList = [];
-    let filteredRightList = [];
-
-    for (let i = 0; i < leftList.length; i++) {
-        if (searchLeftValue && isMatching(leftList[i].first_name + ' ' + leftList[i].last_name, searchLeftValue)) {
-            filteredLeftList.push(leftList[i]);
-        } else if (!searchLeftValue) {
-            filteredLeftList = leftList;
-        }
-    }
-
-    for (let i = 0; i < rightList.length; i++) {
-        if (searchRightValue && isMatching(rightList[i].first_name + ' ' + rightList[i].last_name, searchRightValue)) {
-            filteredRightList.push(rightList[i]);
-        } else if (!searchRightValue) {
-            filteredRightList = rightList;
-        }
-    }
-
-    friendsAllList.innerHTML = createAllFriendsDiv(filteredLeftList);
-    friendsInList.innerHTML = createInListFriendsDiv(filteredRightList);
+    friendsAllList.innerHTML = createAllFriendsDiv(leftList, searchLeftValue);
+    friendsInList.innerHTML = createInListFriendsDiv(rightList, searchRightValue);
 }
 
 function assignEvents(result) {
@@ -139,18 +109,14 @@ function assignEvents(result) {
     friendsBox.addEventListener('selectstart', e => e.preventDefault());
 
     // назначаем события для DnD-элементов
-
-    appContainer.addEventListener('mousedown', e => {
-        dndOnMouseDown(e, dragObject);
-    });
-    appContainer.addEventListener('mousemove', e => dndOnMouseMove(e, dragObject, friendsInAllFriendsItems, friendsInListItems));
+    appContainer.addEventListener('mousedown', e => dndOnMouseDown(e, dragObject));
+    appContainer.addEventListener('mousemove', e => dndOnMouseMove(e, dragObject));
     appContainer.addEventListener('mouseup', e => {
         dndOnMouseUp(e, dragObject, friendsInAllFriendsItems, friendsInListItems);
         dragObject = {};
     });
 
     // назначаем события для полей поиска
-
     searchAllInput.addEventListener('keyup', () => {
         refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems, searchAllInput.value, searchListInput.value);
     });
@@ -159,11 +125,7 @@ function assignEvents(result) {
     });
 
     // назначаем событие на кнопку сохранения
-
-    saveButton.addEventListener('click', () => {
-        localStorage.friendsInList = JSON.stringify(friendsInListItems.map(i => i.id));
-        alert('Друзья в списке успешно сохранены');
-    })
+    saveButton.addEventListener('click', () => saveButtonEvent(friendsInListItems))
 }
 
 function assignAddRemoveFriendEvents (e, friendsInAllFriendsItems, friendsInListItems) {
@@ -172,21 +134,9 @@ function assignAddRemoveFriendEvents (e, friendsInAllFriendsItems, friendsInList
     }
 
     if (e.target.dataset.add) {
-        for (let i = 0; i < friendsInAllFriendsItems.length; i++) {
-            if (friendsInAllFriendsItems[i].id == e.target.dataset.add) {
-                friendsInListItems.push(friendsInAllFriendsItems[i]);
-                friendsInAllFriendsItems.splice(i, 1);
-                break;
-            }
-        }
+        transferFriendsBetweenLists(friendsInAllFriendsItems, friendsInListItems, e.target.dataset.add);
     } else if (e.target.dataset.remove) {
-        for (let i = 0; i < friendsInListItems.length; i++) {
-            if (friendsInListItems[i].id == e.target.dataset.remove) {
-                friendsInAllFriendsItems.push(friendsInListItems[i]);
-                friendsInListItems.splice(i, 1);
-                break;
-            }
-        }
+        transferFriendsBetweenLists(friendsInListItems, friendsInAllFriendsItems, e.target.dataset.remove);
     }
 
     refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems, searchAllInput.value, searchListInput.value);
@@ -211,14 +161,13 @@ function dndOnMouseDown(e, dragObject) {
     dragObject.elem = elem.cloneNode(true); // клонируем переносымый элемент
     dragObject.elem.hidden = true; // скрываем клон
     elem.parentNode.insertBefore(dragObject.elem, elem); // вставляем клон в DOM перед оригиналом
-    // dragObject.elem = elem;
 
     // запомнить координаты, с которых начат перенос объекта
     dragObject.downX = e.pageX;
     dragObject.downY = e.pageY;
 }
 
-function dndOnMouseMove(e, dragObject, friendsInAllFriendsItems, friendsInListItems) {
+function dndOnMouseMove(e, dragObject) {
     if (!dragObject.elem) return; // элемент не зажат
 
     if ( !dragObject.avatar ) { // если перенос не начат...
@@ -244,8 +193,6 @@ function dndOnMouseMove(e, dragObject, friendsInAllFriendsItems, friendsInListIt
         dragObject.shiftY = dragObject.downY - coords.top;
 
         startDrag(dragObject); // отобразить начало переноса
-
-        //refreshFriendsLists(friendsInAllFriendsItems, friendsInListItems);
     }
 
     // отобразить перенос объекта при каждом движении мыши
@@ -308,8 +255,6 @@ function startDrag(dragObject) {
     dragObject.avatarDiv.style.zIndex = 1000;
     dragObject.avatarDiv.style.position = 'absolute';
     dragObject.avatarDiv.style.opacity = 0.5;
-
-    console.log(dragObject);
 }
 
 function finishDrag(e, dragObject, friendsInAllFriendsItems, friendsInListItems) {
@@ -317,21 +262,9 @@ function finishDrag(e, dragObject, friendsInAllFriendsItems, friendsInListItems)
 
     if (dropElem) {
         if (dropElem.id == 'friends-all-box') {
-            for (let i = 0; i < friendsInListItems.length; i++) {
-                if (friendsInListItems[i].id == dragObject.elem.dataset.id) {
-                    friendsInAllFriendsItems.push(friendsInListItems[i]);
-                    friendsInListItems.splice(i, 1);
-                    break;
-                }
-            }
+            transferFriendsBetweenLists(friendsInListItems, friendsInAllFriendsItems, dragObject.elem.dataset.id);
         } else if (dropElem.id == 'friends-in-list-box') {
-            for (let i = 0; i < friendsInAllFriendsItems.length; i++) {
-                if (friendsInAllFriendsItems[i].id == dragObject.elem.dataset.id) {
-                    friendsInListItems.push(friendsInAllFriendsItems[i]);
-                    friendsInAllFriendsItems.splice(i, 1);
-                    break;
-                }
-            }
+            transferFriendsBetweenLists(friendsInAllFriendsItems, friendsInListItems, dragObject.elem.dataset.id);
         }
     } else {
         console.log('Неудача при переносе');
@@ -356,4 +289,19 @@ function findDroppable(event, dragObject) {
     }
 
     return elem.closest('.droppable');
+}
+
+function saveButtonEvent(friendsInListItems) {
+    localStorage.friendsInList = JSON.stringify(friendsInListItems.map(i => i.id));
+    alert('Друзья в списке успешно сохранены');
+}
+
+function transferFriendsBetweenLists(lastList, newList, comparableId) {
+    for (let i = 0; i < lastList.length; i++) {
+        if (lastList[i].id == comparableId) {
+            newList.push(lastList[i]);
+            lastList.splice(i, 1);
+            break;
+        }
+    }
 }

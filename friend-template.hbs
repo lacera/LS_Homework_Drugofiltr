@@ -1,19 +1,19 @@
 {{#each friends}}
-
+    {{#friendsWithSearch first_name last_name ../searchLeftValue}}
         <div class="friend draggable" data-id="{{id}}">
             <img class="photo" src="{{photo_100}}">
             <div class="name">{{first_name}} {{last_name}}</div>
             <div class="plus" data-add="{{id}}"></div>
         </div>
-
+    {{/friendsWithSearch}}
 {{/each}}
 
 {{#each friendsInList}}
-
+    {{#friendsWithSearch first_name last_name ../searchRightValue}}
         <div class="friend draggable" data-id="{{id}}">
             <img class="photo" src="{{photo_100}}">
             <div class="name">{{first_name}} {{last_name}}</div>
             <div class="cross" data-remove="{{id}}"></div>
         </div>
-
+    {{/friendsWithSearch}}
 {{/each}}
